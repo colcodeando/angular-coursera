@@ -11,6 +11,5 @@ import { routes } from './routes';
     RouterModule.forRoot(routes)
   ],
   exports: [ RouterModule ],
-  declarations: []
 })
 export class AppRoutingModule { }
