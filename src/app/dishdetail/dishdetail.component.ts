@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Dish } from '../shared/dish';
 import { DishService } from '../services/dish.service';
 import { Params, ActivatedRoute } from '@angular/router';
 import { Location } from '@angular/common';
 import { switchMap } from 'rxjs/operators';
+import { MatSliderModule, MatSliderChange } from '@angular/material/slider';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 
 @Component({
@@ -16,11 +18,34 @@ export class DishdetailComponent implements OnInit {
   dish: Dish;
   dishIds: string[];
   prev: string;
-  next: string;  
+  next: string;
+  commentForm: FormGroup;
+  newComment: Comment;
+  
+  formErrors = {
+    'author': '',
+    'comment': ''
+  };
+
+  validationMessages = {
+    'author': {
+      'required': 'Author is required.',
+      'minlength': 'Author name must be at least 2 characters long.'
+    },
+    'comment': {
+      'required': 'Comment is required.',
+      'minlength': 'Comment must be at least 2 characters long.'
+    },
+  };
+
+  @ViewChild('cform', {static: false}) commentFormDirective;
 
   constructor(private dishService: DishService,
   private route: ActivatedRoute,
-  private location: Location) { }
+  private location: Location,
+  private fb: FormBuilder) {
+    this.createForm();
+   }
 
   ngOnInit() {
     this.dishService.getDishIds().subscribe(dishIds => this.dishIds = dishIds);
@@ -36,6 +61,53 @@ export class DishdetailComponent implements OnInit {
 
   goBack(): void {
     this.location.back();
+  }
+
+  createForm() {
+    this.commentForm = this.fb.group({
+      author: ['', [Validators.required, Validators.minLength(2)] ],
+      rating: 5,
+      comment: ['', [Validators.required, Validators.minLength(2)] ]
+    });
+
+    this.commentForm.valueChanges
+    .subscribe(data => this.onValueChanged(data));
+
+    this.onValueChanged(); // (re)set validation messages now
+  }
+
+  onSubmit() {
+    this.newComment = this.commentForm.value;
+    this.newComment.date = new Date().toISOString();
+    console.log(this.newComment);
+    this.dish.comments.push(this.newComment);
+    this.commentFormDirective.resetForm();
+    this.commentForm.reset({
+      author: '',
+      rating: 5,
+      comment: ''
+    });
+    
+  }
+
+  onValueChanged(data?: any) {
+    if (!this.commentForm) { return; }
+    const form = this.commentForm;
+    for (const field in this.formErrors) {
+      if (this.formErrors.hasOwnProperty(field)) {
+        // clear previous error message (if any)
+        this.formErrors[field] = '';
+        const control = form.get(field);
+        if (control && control.dirty && !control.valid) {
+          const messages = this.validationMessages[field];
+          for (const key in control.errors) {
+            if (control.errors.hasOwnProperty(key)) {
+              this.formErrors[field] += messages[key] + ' ';
+            }
+          }
+        }
+      }
+    }
   }
 
 }
