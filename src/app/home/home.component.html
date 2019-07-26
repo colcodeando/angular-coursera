@@ -26,7 +26,7 @@
         <h3>{{promotion.name | uppercase}}</h3>
       </mat-card-title>
     </mat-card-header>
-    <img mat-card-image src={{promotion.image}} alt={{promotion.name}}>
+    <img mat-card-image src="{{BaseURL + promotion.image}}" alt={{promotion.name}}>
     <mat-card-content>
       <p>{{promotion.description}}
       </p>
@@ -40,7 +40,7 @@
           <h3>{{lead.name | uppercase}}</h3>
         </mat-card-title>
       </mat-card-header>
-      <img mat-card-image src={{lead.image}} alt={{lead.name}}>
+      <img mat-card-image src="{{BaseURL + lead.image}}" alt={{lead.name}}>
       <mat-card-content>
         <p>{{lead.description}}
         </p>
@@ -53,11 +53,18 @@
     <h2>Error</h2>
     <h4>{{dishErrMess}}</h4>
   </div>  
-  <div [hidden]="promotion">
+  <div [hidden]="promotion || promoErrMess">
     <mat-spinner></mat-spinner><h4>Loading . . . Please Wait</h4>
-  </div> 
-  <div [hidden]="lead">
+  </div>
+  <div fxFlex *ngIf="promoErrMess">
+    <h2>Error</h2>
+    <h4>{{promoErrMess}}</h4>
+  </div>  
+  <div [hidden]="lead || leadErrMess">
     <mat-spinner></mat-spinner><h4>Loading . . . Please Wait</h4>
-  </div> 
-
+  </div>
+  <div fxFlex *ngIf="leadErrMess">
+    <h2>Error</h2>
+    <h4>{{leadErrMess}}</h4>
+  </div>   
 </div>

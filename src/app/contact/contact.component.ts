@@ -1,7 +1,8 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, Inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Feedback, ContactType } from '../shared/feedback';
-import { flyInOut } from '../animations/app.animations';
+import { flyInOut, expand } from '../animations/app.animations';
+import { FeedbackService } from '../services/feedback.service';
 
 @Component({
   selector: 'app-contact',
@@ -13,14 +14,18 @@ import { flyInOut } from '../animations/app.animations';
     'style': 'display: block;'
   },
   animations: [
-    flyInOut()
+    flyInOut(),
+    expand()
   ]
 })
 export class ContactComponent implements OnInit {
 
   feedbackForm: FormGroup;
   feedback: Feedback;
+  feedbackcopy: Feedback = null;
   contactType = ContactType;
+  errMess: string;
+  showSpinner: boolean = false;
 
   formErrors = {
     'firstname': '',
@@ -52,7 +57,9 @@ export class ContactComponent implements OnInit {
 
   @ViewChild('fform', {static: false}) feedbackFormDirective; //found {static: false} online as a way to correct the compiling error.
 
-  constructor(private fb: FormBuilder) { 
+  constructor(private fb: FormBuilder,
+    private feedbackService: FeedbackService,
+    @Inject('BaseURL') private BaseURL) { 
     this.createForm();
   }
 
@@ -77,8 +84,14 @@ export class ContactComponent implements OnInit {
   }
 
   onSubmit() {
-    this.feedback = this.feedbackForm.value;
-    console.log(this.feedback);
+    this.showSpinner = true;
+    this.feedbackcopy = this.feedbackForm.value;
+    this.feedbackService.submitFeedback(this.feedbackcopy)
+    .subscribe(feedback => {
+      this.feedback = feedback; this.showSpinner = false; console.log(this.feedback);
+      setTimeout(() => this.feedback = null, 5000)
+    }, errmess => this.errMess = <any>errmess);
+    this.feedbackFormDirective.resetForm();    
     this.feedbackForm.reset({
       firstname: '',
       lastname: '',
@@ -88,7 +101,6 @@ export class ContactComponent implements OnInit {
       contacttype: 'None',
       message: ''
     });
-    this.feedbackFormDirective.resetForm();
   }
 
   onValueChanged(data?: any) {
